@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageOptimize - Smart Image Compression</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1A1A1A 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            margin: 4rem 0;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #ffffff, #f2f1f1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 3rem;
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-container:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .upload-container.drag-over {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 2rem;
+        }
+
+        .selected-image-preview {
+            display: none;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+
+        .selected-image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .selected-file-name {
+            color: #888;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .file-selected .upload-button {
+            background: #805AD5;
+            color: #fff;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .upload-button {
+            background: #fff;
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
+
+        .size-control {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #805AD5;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #805AD5;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: #9F7AEA;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            background: #9F7AEA;
+        }
+
+        .size-input {
+            width: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            text-align: center;
+        }
+
+        .size-input:focus {
+            outline: none;
+            border-color: #805AD5;
+        }
+
+        .optimize-button {
+            background: linear-gradient(to right, #9F7AEA, #805AD5);
+            color: #fff;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .optimize-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(159, 122, 234, 0.4);
+            background: linear-gradient(to right, #B794F4, #9F7AEA);
+        }
+
+        #preview-container {
+            display: none;
+            margin-top: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        #preview {
+            max-width: 100%;
+            max-height: 600px;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            margin: 1rem auto;
+            display: block;
+            object-fit: contain;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .preview-title {
+            color: #888;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        #loading {
+            display: none;
+            color: #fff;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .error {
+            color: #FF4444;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 68, 68, 0.1);
+            border-radius: 0.5rem;
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .footer-brand {
+            font-weight: 600;
+            color: #B794F4;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-link {
+            color: #888;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-link:hover {
+            color: #B794F4;
+        }
+
+        .footer-link svg {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>Image Resize</h1>
+            <p>Compress your images without compromising quality using advanced AI-powered optimization</p>
+        </div>
+
+        <div class="upload-container" id="dropZone">
+            <form id="uploadForm">
+                <div class="file-input-wrapper">
+                    <label class="upload-button" for="image">
+                        Choose Image or Drop Here
+                    </label>
+                    <input type="file" id="image" name="image" accept="image/*" required>
+                    <div class="selected-image-preview" id="selectedPreview">
+                        <div class="selected-file-name" id="fileName"></div>
+                        <img id="selectedImage" alt="Selected image preview">
+                    </div>
+                </div>
+
+                <div class="size-control">
+                    <label for="target_size">Target Size: <span id="size-display">100</span> KB</label>
+                    <div class="slider-container">
+                        <input 
+                            type="range" 
+                            id="size-slider" 
+                            name="target_size" 
+                            min="10" 
+                            max="1000" 
+                            value="100" 
+                            class="slider"
+                        >
+                        <input 
+                            type="number" 
+                            id="size-input" 
+                            value="100" 
+                            min="10" 
+                            max="1000" 
+                            class="size-input"
+                            aria-label="Custom size input"
+                        >
+                    </div>
+                </div>
+
+                <button type="submit" class="optimize-button">Optimize Image</button>
+            </form>
+        </div>
+
+        <div id="loading">Optimizing your image...</div>
+        <div id="error" class="error"></div>
+
+        <div id="preview-container">
+            <div class="preview-title">Optimized Result</div>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="original-size">-</div>
+                    <div class="stat-label">Original Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="compressed-size">-</div>
+                    <div class="stat-label">Compressed Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="compression-ratio">-</div>
+                    <div class="stat-label">Compression Ratio</div>
+                </div>
+            </div>
+            <img id="preview" alt="Optimized preview">
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-brand">ImageResize</div>
+                <div class="footer-links">
+                    <a href="https://www.linkedin.com/in/alen-aji-john/" target="_blank" class="footer-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"></path>
+                        </svg>
+                        LinkedIn
+                    </a>
+                    <a href="https://github.com/your-username" target="_blank" class="footer-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"></path>
+                        </svg>
+                        GitHub
+                    </a>
+
+                </div>
+            </div>
+            <div class="footer-right">
+                © 2024 ImageResize. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const uploadForm = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const preview = document.getElementById('preview');
+        const previewContainer = document.getElementById('preview-container');
+
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('drag-over');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('image').files = files;
+            handleImageSelect(files[0]);
+        }
+
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            previewContainer.style.display = 'none';
+            
+            try {
+                const response = await fetch('/optimize', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Optimization failed');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                // Update preview
+                preview.src = url;
+                previewContainer.style.display = 'block';
+                
+                // Calculate and update compression stats
+                const originalSize = document.getElementById('image').files[0].size;
+                const compressedSize = blob.size;
+                const ratio = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+                
+                document.getElementById('compressed-size').textContent = formatFileSize(compressedSize);
+                document.getElementById('compression-ratio').textContent = ratio + '%';
+                
+                // Trigger download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'optimized.jpg';
+                a.click();
+                
+            } catch (err) {
+                error.textContent = err.message;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        // Add this new code for slider functionality
+        const sizeSlider = document.getElementById('size-slider');
+        const sizeInput = document.getElementById('size-input');
+        const sizeDisplay = document.getElementById('size-display');
+
+        function updateSizeDisplay(value) {
+            sizeDisplay.textContent = value;
+        }
+
+        sizeSlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            sizeInput.value = value;
+            updateSizeDisplay(value);
+        });
+
+        sizeInput.addEventListener('input', (e) => {
+            let value = parseInt(e.target.value);
+            if (value < 10) value = 10;
+            if (value > 1000) value = 1000;
+            sizeSlider.value = value;
+            updateSizeDisplay(value);
+        });
+
+        // Update form submission to use slider value
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('image', document.getElementById('image').files[0]);
+            formData.append('target_size', sizeSlider.value);
+            // ... (rest of the submission code remains the same) ...
+        });
+
+        // Add image preview functionality
+        const imageInput = document.getElementById('image');
+        const selectedPreview = document.getElementById('selectedPreview');
+        const selectedImage = document.getElementById('selectedImage');
+        const fileName = document.getElementById('fileName');
+        const uploadButton = document.querySelector('.upload-button');
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function handleImageSelect(file) {
+            if (file) {
+                // Show file name
+                fileName.textContent = file.name;
+                
+                // Update original file size
+                document.getElementById('original-size').textContent = formatFileSize(file.size);
+                document.getElementById('compressed-size').textContent = '-';
+                document.getElementById('compression-ratio').textContent = '-';
+                
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImage.src = e.target.result;
+                    selectedPreview.style.display = 'block';
+                    uploadButton.parentElement.classList.add('file-selected');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedPreview.style.display = 'none';
+                uploadButton.parentElement.classList.remove('file-selected');
+            }
+        }
+
+        imageInput.addEventListener('change', (e) => {
+            handleImageSelect(e.target.files[0]);
+        });
+    </script>
+</body>
+</html> 
